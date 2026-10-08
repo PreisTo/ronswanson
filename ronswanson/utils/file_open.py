@@ -30,7 +30,7 @@ def open_component_file(database_file_name: str, sim_id: int) -> h5py.File:
 
         log.debug(f"creating the store directory: {multi_file_dir}")
 
-        multi_file_dir.mkdir()
+        multi_file_dir.mkdir(exist_ok=True)
 
     this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"
 
