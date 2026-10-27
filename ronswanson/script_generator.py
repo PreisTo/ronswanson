@@ -361,27 +361,16 @@ class SLURMGenerator(ScriptGenerator):
         if self._node_start < (self._n_nodes - 1):
 
             self._add_line(
-                f"#SBATCH --array={self._node_start}-{self._n_nodes-1} #generate array"
+                f"#$ -t {self._node_start+1}-{self._n_nodes} #generate array"
             )
-
-        self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
-        self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
-        self._add_line("#SBATCH -D ./                      #working directory")
-        self._add_line("#SBATCH -J grid_mp                 #job name")
-        self._add_line("#SBATCH -N 1               ")
-        self._add_line("#SBATCH --ntasks-per-node=1")
-        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs_to_use}")
-        self._add_line(
-            f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
-        )
-        self._add_line("#SBATCH --mail-type=ALL ")
-
-        self._add_line(
-            f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
-        )
+        self._add_line("#$ -cwd")
+        self._add_line("#$ -o ./output/$JOB_ID_$TASK_ID.out")
+        self._add_line("#$ -e ./output/$JOB_ID_$TASK_ID.err")
+        self._add_line("#$ -N grid_mp")
+        self._add_line(f"#$ -pe smp 1")
         self._add_line("")
 
-        self._add_line("module purge")
+        self._add_line("mamba activate fermi2")
 
         if ronswanson_config.slurm.modules is not None:
 
@@ -390,12 +379,8 @@ class SLURMGenerator(ScriptGenerator):
                 self._add_line(f"module load {m}")
 
         self._end_line()
-
-        self._add_line("#add HDF5 library path to ld path")
-        self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
-
         self._add_line(
-            f"srun {ronswanson_config.slurm.python} run_simulation.py ${{SLURM_ARRAY_TASK_ID}}"
+            f"{ronswanson_config.slurm.python} run_simulation.py ${{SGE_TASK_ID}}"
         )
 
 

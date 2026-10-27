@@ -601,7 +601,7 @@ class SimulationBuilder:
 
                 k += 1
 
-            key_out[i] = output
+            key_out[i+1] = output
 
         with open(self._base_dir / "key_file.json", "w") as f:
 
@@ -678,6 +678,21 @@ class SimulationBuilder:
 
         log.info(
             "[bold green blink]generated:[/bold green blink] run_simulation.py"
+        )
+
+        python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
+            "gather_results.py",
+            database_file_name=self._out_file,
+            current_size=self._current_database_size,
+            n_outputs=self._n_outputs,
+            clean=self._clean,
+            num_meta_parameters=self._num_meta_parameters,
+        )
+
+        python_gather_gen.write(str(self._base_dir))
+
+        log.info(
+            "[bold green blink]generated:[/bold green blink] gather_results.py"
         )
 
     def _generate_slurm_script(self) -> None:
