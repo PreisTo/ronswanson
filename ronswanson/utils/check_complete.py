@@ -127,7 +127,7 @@ def examine_parameter(
 
             for i in range(n_points):
 
-                result = pg.full_grid[i]
+                result = pg.at_index(i, as_array=True)
 
                 this_param = result[idx]
                 other_param = result[jdx]
@@ -250,7 +250,7 @@ def examine_parameter_detailed(
 
             for i, j in enumerate(finished_ids):
 
-                result = pg.full_grid[j]
+                result = pg.at_index(j, as_array=True)
 
                 this_param = result[idx]
                 other_param = result[jdx]

@@ -251,17 +251,20 @@ class ParameterGrid:
 
     parameter_list: List[Parameter]
     energy_grid: List[EnergyGrid]
-    full_grid: Optional[np.ndarray] = field(init=False)
 
     def __post_init__(self):
+        sizes = [p.grid.size for p in self.parameter_list]
 
-        object.__setattr__(
-            self,
-            'full_grid',
-            cartesian_jit([p.grid for p in self.parameter_list]),
-        )
+        n = 1
+        for size in sizes:
+            n *= int(size)
 
-        pass
+        self._grid_sizes = sizes
+        self._n_grid_points = n
+
+    @property
+    def n_grid_points(self) -> int:
+        return self._n_grid_points
 
     @property
     def min_max_values(self) -> np.ndarray:
@@ -389,27 +392,29 @@ class ParameterGrid:
     def at_index(
         self, i: int, as_array: bool = False
     ) -> Union[Dict[str, float], np.ndarray]:
-        """
-        return the ith set of parameters
 
-        :param i:
-        :type i: int
-        :returns:
+        if i < 0:
+            i += self._n_grid_points
 
-        """
+        if not 0 <= i < self._n_grid_points:
+            raise IndexError(
+                f"Parameter-grid index {i} out of range "
+                f"for grid of size {self._n_grid_points}"
+            )
 
-        result = self.full_grid[i]
+        result = np.empty(len(self.parameter_list), dtype=float)
 
-        if not as_array:
+        idx = i
 
-            d = OrderedDict()
+        for j in range(len(self.parameter_list) - 1, -1, -1):
+            grid = self.parameter_list[j].grid
+            grid_idx = idx % grid.size
 
-            for k, v in zip(self.parameter_names, result):
+            result[j] = grid[grid_idx]
 
-                d[k] = v
+            idx //= grid.size
 
-            return d
-
-        else:
-
+        if as_array:
             return result
+
+        return OrderedDict(zip(self.parameter_names, result))
