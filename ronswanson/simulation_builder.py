@@ -119,8 +119,8 @@ class SimulationBuilder:
         n_lhs_points: int = 10,
         skip_lhs_generator: bool = False,
         lhs_unit_file: Optional[str] = None,
+        parameter_file: Optional[str] = "parameters.yml",
     ):
-
         """TODO describe function
 
         :param parameter_grid:
@@ -156,7 +156,7 @@ class SimulationBuilder:
 
         # write out the parameter file
 
-        self._parameter_file: Path = self._base_dir / "parameters.yml"
+        self._parameter_file: Path = self._base_dir / parameter_file
 
         parameter_grid.write(str(self._parameter_file))
 
@@ -258,8 +258,8 @@ class SimulationBuilder:
         for k, v in inputs.items():
 
             log.debug(f"{k}: {v}")
-
-        parameter_grid = ParameterGrid.from_yaml(inputs.pop("parameter_grid"))
+        parameter_file = inputs.pop("parameter_grid")
+        parameter_grid = ParameterGrid.from_yaml(parameter_file)
 
         log.debug("read parameter grid")
 
@@ -304,6 +304,7 @@ class SimulationBuilder:
             parameter_grid=parameter_grid,
             simulation_config=simulation_config,
             gather_config=gather_config,
+            parameter_file=parameter_file,
             **inputs,
         )
 
@@ -399,7 +400,7 @@ class SimulationBuilder:
                         f"output_{i}",
                         shape=(n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
-                        dtype="float64"
+                        dtype="float64",
                         # compression="gzip",
                     )
 
@@ -442,7 +443,9 @@ class SimulationBuilder:
 
                 self._initialize_database()
 
-            copy_file_name: str = f"{Path(self._out_file).parent}/{Path(self._out_file).stem}_copy{Path(self._out_file).suffix}"
+            copy_file_name: str = (
+                f"{Path(self._out_file).parent}/{Path(self._out_file).stem}_copy{Path(self._out_file).suffix}"
+            )
 
             log.warning(f"a copy will be made to [blue]{copy_file_name}[\blue]")
 
